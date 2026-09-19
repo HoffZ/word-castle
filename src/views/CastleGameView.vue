@@ -1,4 +1,5 @@
 <script>
+import gameViewport from '../mixins/gameViewport.js';
 import { createGameAudio, loadSoundEnabled } from '../services/gameAudio.js';
 import GameHud from '../components/game/GameHud.vue';
 import CastleScene from '../components/game/CastleScene.vue';
@@ -23,6 +24,7 @@ import {
 } from '../game/bossFight.js';
 
 export default {
+  mixins: [gameViewport],
   components: { GameHud, CastleScene, AnswerForm, RoundSummary, VictoryConfetti },
   props: {
     batch: { type: Object, required: true },
@@ -252,7 +254,12 @@ export default {
     @replay="$emit('replay')"
     @exit="$emit('exit')"
   />
-  <section v-else class="game-page">
+  <section
+    v-else
+    class="game-page"
+    :style="gameViewportStyle"
+    :class="{ 'short-viewport': viewportHeight < 430 }"
+  >
     <div class="game-title">
       <h1>
         {{ phase === 'boss' ? 'Sjefszombien!' : 'Forsvar borga' }}

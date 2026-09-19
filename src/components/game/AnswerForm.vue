@@ -23,7 +23,7 @@ export default {
   },
   methods: {
     focus() {
-      this.$nextTick(() => this.$refs.answer?.focus());
+      this.$nextTick(() => this.$refs.answer?.focus({ preventScroll: true }));
     },
     submit() {
       if (this.answer.trim() && !this.disabled) this.$emit('answer', this.answer);
@@ -39,8 +39,10 @@ export default {
         id="magic-answer"
         ref="answer"
         v-model="answer"
-        :disabled="disabled"
+        :aria-disabled="disabled"
         placeholder="Skriv ordet på engelsk …"
+        enterkeyhint="send"
+        autocorrect="off"
         autocomplete="off"
         autocapitalize="none"
         spellcheck="false"

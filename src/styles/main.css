@@ -1568,3 +1568,245 @@ progress::-webkit-progress-value {
     padding: 6px 12px;
   }
 }
+
+/* A keyboard-aware mobile battlefield. Keep the prompt and input in one viewport. */
+@media (max-width: 700px) {
+  input {
+    font-size: 16px;
+  }
+  .word-row input,
+  .answer-form input {
+    font-size: 16px;
+  }
+  .is-playing .site-header {
+    display: none;
+  }
+  .is-playing .game-page {
+    position: fixed;
+    top: var(--game-viewport-top, 0px);
+    left: 0;
+    right: 0;
+    height: var(--game-viewport-height, 100dvh);
+    max-width: none;
+    margin: 0;
+    padding: 6px 8px max(6px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    background: #f7f5ed;
+    z-index: 20;
+  }
+  .game-page .game-title,
+  .game-page .practice-list {
+    display: none;
+  }
+  .game-page .game-board {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 230px;
+    border-radius: 12px;
+  }
+  .game-page .game-hud {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 4px 8px;
+    padding: 6px 9px;
+    flex: 0 0 auto;
+  }
+  .game-page .game-hud .eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.4px;
+  }
+  .game-page .game-hud strong {
+    font-size: 19px;
+    margin: 0;
+  }
+  .game-page .progress-stat {
+    min-width: 0;
+    max-width: none;
+  }
+  .game-page .progress-stat strong small {
+    font-size: 0;
+  }
+  .game-page .progress-stat strong small::first-letter {
+    font-size: 10px;
+  }
+  .game-page .game-hud progress {
+    margin-top: 2px;
+    height: 4px;
+  }
+  .game-page .game-hud .sound-toggle {
+    grid-column: 3;
+    grid-row: 1;
+    font-size: 11px;
+    padding: 6px 9px;
+    min-height: 32px;
+  }
+  .game-page .round-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    margin-top: -2px;
+  }
+  .game-page .round-actions .secondary {
+    padding: 6px 12px;
+    min-height: 32px;
+    font-size: 11px;
+  }
+  .game-page .zombie-scene {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 120px;
+    max-height: 330px;
+  }
+  .game-page .game-controls {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    padding: 8px 10px;
+  }
+  .game-page .loading-instructions > small,
+  .game-page .answer-form > small {
+    display: none;
+  }
+  .game-page .loading-instructions .feedback {
+    font-size: 11px;
+    line-height: 1.25;
+    margin: 0;
+  }
+  .game-page .answer-form label {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .game-page .answer-form input {
+    font-size: 16px;
+    padding: 10px;
+    min-width: 0;
+    height: 42px;
+  }
+  .game-page .answer-form .primary {
+    min-height: 42px;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  .game-page .answer-hint {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 9px;
+    border-width: 2px;
+    box-shadow: none;
+  }
+  .game-page .answer-hint span {
+    font-size: 9px;
+  }
+  .game-page .answer-hint strong {
+    font-size: 22px;
+  }
+  .game-page .zombie-scene .castle {
+    font-size: 65px;
+    bottom: 23px;
+  }
+  .game-page .castle-flag,
+  .game-page .scene-mushroom {
+    display: none;
+  }
+  .game-page .ground-path {
+    bottom: 9px;
+    height: 30px;
+  }
+  .game-page .cannon {
+    bottom: 21px;
+    transform: scale(0.64);
+    transform-origin: bottom left;
+  }
+  .game-page .cannon-label {
+    max-width: 235px;
+  }
+  .game-page .zombie {
+    bottom: 23px;
+  }
+  .game-page .zombie > span {
+    font-size: 43px;
+  }
+  .game-page .boss-zombie > span {
+    font-size: 74px;
+  }
+  .game-page .boss-speech {
+    font-size: 10px;
+    max-width: 110px;
+    padding: 3px 6px;
+  }
+  .game-page .word-projectile {
+    bottom: 47px;
+    font-size: 13px;
+    padding: 5px 9px;
+  }
+  .game-page .zombie-hit {
+    bottom: 30px;
+    font-size: 37px;
+  }
+  .game-page .boss-status {
+    margin: 0;
+    padding: 5px 10px;
+    gap: 5px 10px;
+    flex-shrink: 0;
+  }
+  .game-page .boss-status small {
+    display: none;
+  }
+  .game-page .boss-status > span {
+    font-size: 20px;
+  }
+  .game-page .weekly-celebration {
+    margin: 0;
+    padding: 8px;
+    flex-shrink: 0;
+  }
+  .game-page .weekly-celebration strong {
+    font-size: 20px;
+  }
+  .game-page .weekly-celebration span {
+    font-size: 11px;
+  }
+  .game-page .pause-overlay {
+    gap: 6px;
+    padding: 10px;
+  }
+  .game-page .pause-overlay strong {
+    font-size: 24px;
+  }
+  .game-page .pause-overlay span {
+    font-size: 11px;
+  }
+  .game-page.short-viewport .game-hud {
+    grid-template-columns: 1fr auto auto;
+  }
+  .game-page.short-viewport .progress-stat {
+    display: none;
+  }
+  .game-page.short-viewport .game-hud .sound-toggle {
+    grid-column: 2;
+  }
+  .game-page.short-viewport .round-actions {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+    gap: 4px;
+  }
+  .game-page.short-viewport .game-hud .secondary {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  .game-page.short-viewport .loading-instructions .feedback {
+    display: none;
+  }
+  .game-page.short-viewport .zombie-scene {
+    min-height: 110px;
+  }
+}
