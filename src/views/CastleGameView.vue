@@ -166,7 +166,7 @@ export default {
         } else {
           this.bossMessage = 'Uff og huff!';
           this.bossMessageUntil = this.attack.time + 2;
-          this.gameAudio.hit('Uff og huff!');
+          this.gameAudio.hit();
           this.chooseWord();
         }
       } else {

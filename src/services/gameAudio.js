@@ -1,3 +1,11 @@
+const HIT_SOUND_URLS = Object.values(
+  import.meta.glob('../sounds/ouch/*.{mp3,wav,ogg,m4a}', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }),
+);
+
 const SOUND_KEY = 'word-castle.sound';
 const REACTIONS = ['Au!', 'Uff!', 'Nei!', 'Sokkane mine!', 'Eg vil heim!'];
 
@@ -9,14 +17,32 @@ export function loadSoundEnabled() {
   }
 }
 
-// Generate effects locally; no audio downloads or server requests are needed.
+// Mix bundled recordings with locally generated effects and on-device speech.
 export function createGameAudio(enabled = true) {
   let context;
   let active = enabled;
   let disposed = false;
   let generation = 0;
   const sources = new Set();
+  const hitBuffers = new Map();
+  let preloadPromise;
   const speech = window.speechSynthesis;
+
+  function preloadHits(audio) {
+    preloadPromise ||= Promise.all(
+      HIT_SOUND_URLS.map(async (url) => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) return;
+          const buffer = await audio.decodeAudioData(await response.arrayBuffer());
+          if (!disposed) hitBuffers.set(url, buffer);
+        } catch {
+          // Keep the existing voice/yelp fallback if a recording cannot be loaded.
+        }
+      }),
+    );
+    return preloadPromise;
+  }
 
   function stop() {
     generation += 1;
@@ -47,11 +73,12 @@ export function createGameAudio(enabled = true) {
     }
   }
 
-  function playSource(audio, source, volume, duration, delay = 0) {
+  function playSource(audio, source, volume, duration, delay = 0, recorded = false) {
     const gain = audio.createGain();
     const now = audio.currentTime + delay;
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(volume, now + 0.008);
+    if (recorded) gain.gain.setValueAtTime(volume, now + Math.max(0.008, duration - 0.03));
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
     source.connect(gain);
     gain.connect(audio.destination);
@@ -66,9 +93,10 @@ export function createGameAudio(enabled = true) {
   }
 
   return {
-    unlock() {
-      // Prepare audio when the player starts the round, even before the first shot.
-      return ready();
+    async unlock() {
+      // Decode recordings early so impact playback never waits for a download.
+      const audio = await ready();
+      if (audio) await preloadHits(audio);
     },
     async cannon() {
       // Called by the submit gesture, which unlocks browser audio playback.
@@ -90,6 +118,18 @@ export function createGameAudio(enabled = true) {
     },
     async hit(reaction) {
       if (!active || disposed) return;
+      // Regular zombies and the boss share randomized hit recordings and reactions.
+      const buffers = [...hitBuffers.values()];
+      const choice = Math.floor(Math.random() * (buffers.length + 1));
+      if (!reaction && choice < buffers.length) {
+        const audio = await ready();
+        if (!audio) return;
+        speech?.cancel();
+        const source = audio.createBufferSource();
+        source.buffer = buffers[choice];
+        playSource(audio, source, 0.65, source.buffer.duration, 0, true);
+        return;
+      }
       // Only use on-device Norwegian voices. A cartoon yelp works without one.
       const voice = speech
         ?.getVoices()
@@ -178,6 +218,10 @@ export function createGameAudio(enabled = true) {
     setEnabled(value) {
       active = value;
       if (!active) stop();
+      else
+        ready().then((audio) => {
+          if (audio) preloadHits(audio);
+        });
       try {
         localStorage.setItem(SOUND_KEY, value ? 'on' : 'off');
       } catch {
@@ -188,6 +232,7 @@ export function createGameAudio(enabled = true) {
     dispose() {
       disposed = true;
       stop();
+      hitBuffers.clear();
       context?.close().catch(() => {});
     },
   };
