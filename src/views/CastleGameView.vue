@@ -14,6 +14,8 @@ import {
   createAttack,
   advanceAttack,
   shootNearest,
+  ensureZombie,
+  adjustDifficulty,
 } from '../game/castleGame.js';
 import {
   BOSS_HEALTH,
@@ -101,7 +103,7 @@ export default {
       if (this.phase === 'celebration') return 'Nyt applausen! Ein litt for stor gjest er på veg …';
       return this.waiting
         ? `Neste zombie om ${this.spawnCountdown} sekund. Gjer deg klar!`
-        : 'Ny zombie kvart 10. sekund. 20 sekund til borga!';
+        : `Ny zombie kvart ${this.attack.spawnInterval}. sekund. 20 sekund til borga!`;
     },
   },
   created() {
@@ -153,6 +155,7 @@ export default {
     },
     finishShot() {
       this.impact = { position: this.shot.targetPosition, startedAt: this.attack.time };
+      const targetPosition = this.shot.targetPosition;
       this.shot = null;
       if (this.phase === 'boss') {
         this.bossHealth = damageBoss(this.bossHealth);
@@ -170,6 +173,10 @@ export default {
         this.$emit('defeated', 1);
         this.gameAudio.hit();
         if (this.completed === this.total) this.startCelebration();
+        else {
+          adjustDifficulty(this.attack, targetPosition);
+          ensureZombie(this.attack);
+        }
       }
     },
     tick(time) {

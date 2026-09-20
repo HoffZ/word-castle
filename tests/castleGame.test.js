@@ -49,19 +49,53 @@ test('the cannon removes the nearest zombie while later zombies keep approaching
   assert.equal(advanceAttack(attack, 10), true);
 });
 
-test('an empty battlefield waits for the scheduled spawn and a restart is fresh', async () => {
-  const { createAttack, advanceAttack, shootNearest } = await import('../src/game/castleGame.js');
+test('the last defeated zombie is replaced immediately without changing the spawn schedule', async () => {
+  const { createAttack, advanceAttack, shootNearest, ensureZombie } =
+    await import('../src/game/castleGame.js');
   const attack = createAttack();
+  advanceAttack(attack, 3);
   shootNearest(attack);
-  assert.equal(shootNearest(attack), null);
-  advanceAttack(attack, 9);
-  assert.equal(attack.zombies.length, 0);
-  advanceAttack(attack, 1);
-  assert.equal(attack.zombies[0].bornAt, 10);
-  assert.deepEqual(createAttack(), {
-    time: 0,
-    nextSpawn: 10,
-    nextId: 2,
-    zombies: [{ id: 1, bornAt: 0 }],
-  });
+  ensureZombie(attack);
+  assert.deepEqual(attack.zombies, [{ id: 2, bornAt: 3 }]);
+  assert.equal(attack.nextSpawn, 10);
+  ensureZombie(attack);
+  assert.equal(attack.zombies.length, 1);
+  advanceAttack(attack, 7);
+  assert.deepEqual(attack.zombies, [
+    { id: 2, bornAt: 3 },
+    { id: 3, bornAt: 10 },
+  ]);
+  shootNearest(attack);
+  ensureZombie(attack);
+  assert.deepEqual(attack.zombies, [{ id: 3, bornAt: 10 }]);
+});
+
+test('two early hits gently accelerate the next spawn without spawning instantly', async () => {
+  const { createAttack, advanceAttack, adjustDifficulty } =
+    await import('../src/game/castleGame.js');
+  const attack = createAttack();
+  advanceAttack(attack, 2);
+  adjustDifficulty(attack, 10);
+  assert.equal(attack.spawnInterval, 10);
+  adjustDifficulty(attack, 20);
+  assert.equal(attack.spawnInterval, 9);
+  assert.equal(attack.nextSpawn, 9.2);
+  assert.equal(attack.zombies.length, 1);
+});
+
+test('difficulty respects limits, breaks early streaks and resets for a new round', async () => {
+  const { createAttack, adjustDifficulty } = await import('../src/game/castleGame.js');
+  const attack = createAttack();
+  adjustDifficulty(attack, 10);
+  adjustDifficulty(attack, 50);
+  adjustDifficulty(attack, 10);
+  assert.equal(attack.spawnInterval, 10);
+  for (let hit = 0; hit < 30; hit++) adjustDifficulty(attack, 10);
+  assert.equal(attack.spawnInterval, 5);
+  adjustDifficulty(attack, 80);
+  assert.equal(attack.spawnInterval, 6);
+  assert.equal(attack.earlyHits, 0);
+  for (let hit = 0; hit < 20; hit++) adjustDifficulty(attack, 90);
+  assert.equal(attack.spawnInterval, 10);
+  assert.equal(createAttack().spawnInterval, 10);
 });

@@ -21,9 +21,17 @@ export function nextWord(words, progress, previousId, random = Math.random) {
 }
 
 export const SPAWN_SECONDS = 10;
+export const MIN_SPAWN_SECONDS = 5;
 
 export function createAttack() {
-  return { time: 0, nextSpawn: SPAWN_SECONDS, nextId: 2, zombies: [{ id: 1, bornAt: 0 }] };
+  return {
+    time: 0,
+    nextSpawn: SPAWN_SECONDS,
+    spawnInterval: SPAWN_SECONDS,
+    earlyHits: 0,
+    nextId: 2,
+    zombies: [{ id: 1, bornAt: 0 }],
+  };
 }
 
 // Absolute game time preserves the spawn rhythm across frames and pauses.
@@ -31,7 +39,7 @@ export function advanceAttack(attack, seconds) {
   attack.time += seconds;
   while (attack.nextSpawn <= attack.time) {
     attack.zombies.push({ id: attack.nextId++, bornAt: attack.nextSpawn });
-    attack.nextSpawn += SPAWN_SECONDS;
+    attack.nextSpawn += attack.spawnInterval;
   }
   return attack.zombies.some((zombie) => attack.time - zombie.bornAt >= APPROACH_SECONDS);
 }
@@ -41,4 +49,32 @@ export function shootNearest(attack) {
   const nearest = attack.zombies.reduce((a, b) => (a.bornAt <= b.bornAt ? a : b));
   attack.zombies = attack.zombies.filter((zombie) => zombie.id !== nearest.id);
   return nearest;
+}
+
+// Refill only after impact, so the visible target stays until the cannonball lands.
+export function ensureZombie(attack) {
+  if (attack.zombies.length) return;
+  attack.zombies.push({ id: attack.nextId++, bornAt: attack.time });
+}
+
+// Two early hits speed up the wave gently; a late hit gives the player more room.
+export function adjustDifficulty(attack, targetPosition) {
+  const previousInterval = attack.spawnInterval;
+  if (targetPosition < 35) {
+    attack.earlyHits += 1;
+    if (attack.earlyHits >= 2) {
+      attack.spawnInterval = Math.max(MIN_SPAWN_SECONDS, previousInterval - 1);
+      attack.earlyHits = 0;
+    }
+  } else {
+    attack.earlyHits = 0;
+    if (targetPosition >= 65) {
+      attack.spawnInterval = Math.min(SPAWN_SECONDS, previousInterval + 1);
+    }
+  }
+  if (attack.spawnInterval !== previousInterval) {
+    // Preserve progress toward the next spawn instead of releasing a sudden extra wave.
+    const remaining = Math.max(0, attack.nextSpawn - attack.time);
+    attack.nextSpawn = attack.time + (remaining * attack.spawnInterval) / previousInterval;
+  }
 }
