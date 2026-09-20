@@ -1,5 +1,15 @@
+import bossHitUrl from '../sounds/boss/boss-hit.mp3?url';
+
 const HIT_SOUND_URLS = Object.values(
   import.meta.glob('../sounds/ouch/*.{mp3,wav,ogg,m4a}', {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  }),
+);
+
+const SPAWN_SOUND_URLS = Object.values(
+  import.meta.glob('../sounds/spawn/*.{mp3,wav,ogg,m4a}', {
     eager: true,
     query: '?url',
     import: 'default',
@@ -24,18 +34,18 @@ export function createGameAudio(enabled = true) {
   let disposed = false;
   let generation = 0;
   const sources = new Set();
-  const hitBuffers = new Map();
+  const recordingBuffers = new Map();
   let preloadPromise;
   const speech = window.speechSynthesis;
 
-  function preloadHits(audio) {
+  function preloadRecordings(audio) {
     preloadPromise ||= Promise.all(
-      HIT_SOUND_URLS.map(async (url) => {
+      [...HIT_SOUND_URLS, ...SPAWN_SOUND_URLS, bossHitUrl].map(async (url) => {
         try {
           const response = await fetch(url);
           if (!response.ok) return;
           const buffer = await audio.decodeAudioData(await response.arrayBuffer());
-          if (!disposed) hitBuffers.set(url, buffer);
+          if (!disposed) recordingBuffers.set(url, buffer);
         } catch {
           // Keep the existing voice/yelp fallback if a recording cannot be loaded.
         }
@@ -92,11 +102,32 @@ export function createGameAudio(enabled = true) {
     source.stop(now + duration);
   }
 
+  async function playRecording(url, volume) {
+    const requestedGeneration = generation;
+    const audio = await ready();
+    if (!audio || !url) return;
+    await preloadRecordings(audio);
+    // A pause, mute or exit cancels playback that was waiting for decoding.
+    if (!active || disposed || requestedGeneration !== generation) return;
+    const buffer = recordingBuffers.get(url);
+    if (!buffer) return;
+    const source = audio.createBufferSource();
+    source.buffer = buffer;
+    playSource(audio, source, volume, buffer.duration, 0, true);
+  }
+
   return {
+    bossHit() {
+      return playRecording(bossHitUrl, 0.65);
+    },
+    spawn() {
+      const url = SPAWN_SOUND_URLS[Math.floor(Math.random() * SPAWN_SOUND_URLS.length)];
+      return playRecording(url, 0.4);
+    },
     async unlock() {
       // Decode recordings early so impact playback never waits for a download.
       const audio = await ready();
-      if (audio) await preloadHits(audio);
+      if (audio) await preloadRecordings(audio);
     },
     async cannon() {
       // Called by the submit gesture, which unlocks browser audio playback.
@@ -118,8 +149,8 @@ export function createGameAudio(enabled = true) {
     },
     async hit(reaction) {
       if (!active || disposed) return;
-      // Regular zombies and the boss share randomized hit recordings and reactions.
-      const buffers = [...hitBuffers.values()];
+      // Normal zombies mix randomized recordings with voice reactions.
+      const buffers = HIT_SOUND_URLS.map((url) => recordingBuffers.get(url)).filter(Boolean);
       const choice = Math.floor(Math.random() * (buffers.length + 1));
       if (!reaction && choice < buffers.length) {
         const audio = await ready();
@@ -220,7 +251,7 @@ export function createGameAudio(enabled = true) {
       if (!active) stop();
       else
         ready().then((audio) => {
-          if (audio) preloadHits(audio);
+          if (audio) preloadRecordings(audio);
         });
       try {
         localStorage.setItem(SOUND_KEY, value ? 'on' : 'off');
@@ -232,7 +263,7 @@ export function createGameAudio(enabled = true) {
     dispose() {
       disposed = true;
       stop();
-      hitBuffers.clear();
+      recordingBuffers.clear();
       context?.close().catch(() => {});
     },
   };

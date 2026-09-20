@@ -106,11 +106,19 @@ export default {
         : `Ny zombie kvart ${this.attack.spawnInterval}. sekund. 20 sekund til borga!`;
     },
   },
+  watch: {
+    'attack.nextId'(nextId, previousId) {
+      if (this.phase !== 'weekly' || this.outcome) return;
+      // Both timed spawns and immediate replacements increment the same ID counter.
+      for (let id = previousId; id < nextId; id++) this.gameAudio.spawn();
+    },
+  },
   created() {
     this.gameAudio = createGameAudio(this.soundEnabled);
   },
   mounted() {
     this.gameAudio.unlock();
+    this.gameAudio.spawn();
     this.chooseWord();
     this.frame = requestAnimationFrame(this.tick);
     document.addEventListener('visibilitychange', this.onVisibilityChange);
@@ -141,6 +149,7 @@ export default {
     },
     startBoss() {
       this.phase = 'boss';
+      this.gameAudio.spawn();
       this.bossBornAt = this.attack.time;
       this.bossHealth = BOSS_HEALTH;
       this.bossMessage = 'Eg åt visst litt for mykje graut.';
@@ -164,9 +173,9 @@ export default {
           this.gameAudio.bossDeath();
           this.outcome = 'won';
         } else {
+          this.gameAudio.bossHit();
           this.bossMessage = 'Uff og huff!';
           this.bossMessageUntil = this.attack.time + 2;
-          this.gameAudio.hit();
           this.chooseWord();
         }
       } else {
@@ -189,7 +198,7 @@ export default {
         } else {
           if (this.phase === 'boss') {
             this.attack.time += elapsed;
-            // Hold the boss at the cannonball's target until impact, just like normal targets.
+            // Hold the hit at the cannonball's target until impact, just like normal targets.
             if (this.shot) this.bossBornAt += elapsed;
             if (this.bossPosition >= 100) this.lose();
           } else if (this.completed === this.total && this.shot) {
