@@ -17,7 +17,6 @@ const SPAWN_SOUND_URLS = Object.values(
 );
 
 const SOUND_KEY = 'word-castle.sound';
-const REACTIONS = ['Au!', 'Uff!', 'Nei!', 'Sokkane mine!', 'Eg vil heim!'];
 
 export function loadSoundEnabled() {
   try {
@@ -27,7 +26,7 @@ export function loadSoundEnabled() {
   }
 }
 
-// Mix bundled recordings with locally generated effects and on-device speech.
+// Mix bundled recordings with locally generated effects without synthetic speech.
 export function createGameAudio(enabled = true) {
   let context;
   let active = enabled;
@@ -36,7 +35,6 @@ export function createGameAudio(enabled = true) {
   const sources = new Set();
   const recordingBuffers = new Map();
   let preloadPromise;
-  const speech = window.speechSynthesis;
 
   function preloadRecordings(audio) {
     preloadPromise ||= Promise.all(
@@ -47,7 +45,7 @@ export function createGameAudio(enabled = true) {
           const buffer = await audio.decodeAudioData(await response.arrayBuffer());
           if (!disposed) recordingBuffers.set(url, buffer);
         } catch {
-          // Keep the existing voice/yelp fallback if a recording cannot be loaded.
+          // Skip recordings that cannot be loaded; other effects remain available.
         }
       }),
     );
@@ -64,7 +62,6 @@ export function createGameAudio(enabled = true) {
       }
     }
     sources.clear();
-    speech?.cancel();
   }
 
   async function ready() {
@@ -147,50 +144,12 @@ export function createGameAudio(enabled = true) {
       crack.buffer = buffer;
       playSource(audio, crack, 0.18, 0.24);
     },
-    async hit(reaction) {
-      if (!active || disposed) return;
-      // Normal zombies mix randomized recordings with voice reactions.
-      const buffers = HIT_SOUND_URLS.map((url) => recordingBuffers.get(url)).filter(Boolean);
-      const choice = Math.floor(Math.random() * (buffers.length + 1));
-      if (!reaction && choice < buffers.length) {
-        const audio = await ready();
-        if (!audio) return;
-        speech?.cancel();
-        const source = audio.createBufferSource();
-        source.buffer = buffers[choice];
-        playSource(audio, source, 0.65, source.buffer.duration, 0, true);
-        return;
-      }
-      // Only use on-device Norwegian voices. A cartoon yelp works without one.
-      const voice = speech
-        ?.getVoices()
-        .find((voice) => voice.localService && /^(nb|nn|no)(-|$)/i.test(voice.lang));
-      if (voice && window.SpeechSynthesisUtterance) {
-        speech.cancel();
-        const utterance = new SpeechSynthesisUtterance(
-          reaction || REACTIONS[Math.floor(Math.random() * REACTIONS.length)],
-        );
-        utterance.voice = voice;
-        utterance.lang = voice.lang;
-        utterance.pitch = 0.65 + Math.random() * 0.65;
-        utterance.rate = 1.15;
-        utterance.volume = 0.75;
-        speech.speak(utterance);
-        return;
-      }
-      const audio = await ready();
-      if (!audio) return;
-      const yelp = audio.createOscillator();
-      yelp.type = 'triangle';
-      const pitch = 230 + Math.random() * 180;
-      yelp.frequency.setValueAtTime(pitch, audio.currentTime);
-      yelp.frequency.linearRampToValueAtTime(pitch * 1.8, audio.currentTime + 0.07);
-      yelp.frequency.exponentialRampToValueAtTime(85, audio.currentTime + 0.35);
-      playSource(audio, yelp, 0.22, 0.4);
+    hit() {
+      const url = HIT_SOUND_URLS[Math.floor(Math.random() * HIT_SOUND_URLS.length)];
+      return playRecording(url, 0.65);
     },
     async bossDeath() {
       if (!active || disposed) return;
-      speech?.cancel();
       const audio = await ready();
       if (!audio) return;
       // An exaggerated rising shriek that wobbles down into a silly squeak.

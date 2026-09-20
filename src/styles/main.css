@@ -1537,10 +1537,11 @@ progress::-webkit-progress-value {
   font-size: 12px;
 }
 .boss-zombie > span {
-  font-size: 120px;
+  font-size: 240px;
+  line-height: 1;
 }
 .boss-zombie > i {
-  width: 85px;
+  width: 170px;
 }
 .boss-speech {
   position: absolute;
@@ -1557,7 +1558,7 @@ progress::-webkit-progress-value {
 }
 @media (max-width: 620px) {
   .boss-zombie > span {
-    font-size: 95px;
+    font-size: 190px;
   }
   .boss-speech {
     max-width: 135px;
@@ -1735,7 +1736,7 @@ progress::-webkit-progress-value {
     font-size: 43px;
   }
   .game-page .boss-zombie > span {
-    font-size: 74px;
+    font-size: 148px;
   }
   .game-page .boss-speech {
     font-size: 10px;
@@ -1808,5 +1809,18 @@ progress::-webkit-progress-value {
   }
   .game-page.short-viewport .zombie-scene {
     min-height: 110px;
+  }
+}
+
+/* Give the enlarged boss room above the path without shrinking the answer field. */
+.zombie-scene:has(.boss-zombie) {
+  min-height: 330px;
+}
+@media (max-width: 700px) {
+  .game-page .zombie-scene:has(.boss-zombie) {
+    min-height: 205px;
+  }
+  .game-page .boss-zombie > i {
+    width: 100px;
   }
 }
