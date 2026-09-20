@@ -535,6 +535,9 @@ footer {
   margin: 14px 0;
 }
 .game-page {
+  /* Vue overrides these defaults with the visible viewport dimensions. */
+  --game-viewport-top: 0px;
+  --game-viewport-height: 100dvh;
   max-width: 970px;
   margin: 37px auto 45px;
 }
@@ -1400,6 +1403,10 @@ progress::-webkit-progress-value {
   z-index: 100;
 }
 .confetti i {
+  /* Each confetti piece receives its own trajectory from Vue. */
+  --x: 0vw;
+  --y: -60vh;
+  --spin: 0deg;
   position: absolute;
   bottom: -20px;
   width: 11px;
