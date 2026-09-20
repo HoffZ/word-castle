@@ -19,6 +19,7 @@ import {
 } from '../game/castleGame.js';
 import {
   BOSS_HEALTH,
+  BOSS_APPROACH_SECONDS,
   CELEBRATION_SECONDS,
   bossVocabulary,
   pickBossWord,
@@ -80,7 +81,7 @@ export default {
       return Math.ceil(this.attack.nextSpawn - this.attack.time);
     },
     bossPosition() {
-      return ((this.attack.time - this.bossBornAt) / APPROACH_SECONDS) * 100;
+      return ((this.attack.time - this.bossBornAt) / BOSS_APPROACH_SECONDS) * 100;
     },
     visibleZombies() {
       if (this.phase === 'celebration') return [];
@@ -220,7 +221,10 @@ export default {
           this.phase === 'boss'
             ? { id: 'boss', bornAt: this.bossBornAt }
             : shootNearest(this.attack);
-        const position = ((this.attack.time - target.bornAt) / APPROACH_SECONDS) * 100;
+        const position =
+          this.phase === 'boss'
+            ? this.bossPosition
+            : ((this.attack.time - target.bornAt) / APPROACH_SECONDS) * 100;
         this.shot = {
           id: `${target.id}-${this.attempt}`,
           word: answer.trim(),
