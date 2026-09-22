@@ -1,5 +1,5 @@
 export const REQUIRED_WINS = 3;
-export const APPROACH_SECONDS = 20;
+export const APPROACH_SECONDS = 30;
 
 export function normalizeAnswer(answer) {
   return answer.trim().toLocaleLowerCase('en').replace(/\s+/g, ' ');
@@ -20,7 +20,7 @@ export function nextWord(words, progress, previousId, random = Math.random) {
   return candidates[Math.floor(random() * candidates.length)];
 }
 
-export const SPAWN_SECONDS = 10;
+export const SPAWN_SECONDS = 15;
 export const MIN_SPAWN_SECONDS = 5;
 
 export function createAttack() {
@@ -29,6 +29,7 @@ export function createAttack() {
     nextSpawn: SPAWN_SECONDS,
     spawnInterval: SPAWN_SECONDS,
     earlyHits: 0,
+    approachSeconds: APPROACH_SECONDS,
     nextId: 2,
     zombies: [{ id: 1, bornAt: 0 }],
   };
@@ -41,7 +42,7 @@ export function advanceAttack(attack, seconds) {
     attack.zombies.push({ id: attack.nextId++, bornAt: attack.nextSpawn });
     attack.nextSpawn += attack.spawnInterval;
   }
-  return attack.zombies.some((zombie) => attack.time - zombie.bornAt >= APPROACH_SECONDS);
+  return attack.zombies.some((zombie) => attack.time - zombie.bornAt >= attack.approachSeconds);
 }
 
 export function shootNearest(attack) {
@@ -57,19 +58,29 @@ export function ensureZombie(attack) {
   attack.zombies.push({ id: attack.nextId++, bornAt: attack.time });
 }
 
-// Two early hits speed up the wave gently; a late hit gives the player more room.
-export function adjustDifficulty(attack, targetPosition) {
+// Three unassisted early hits increase the challenge; late or assisted hits ease it.
+export function adjustDifficulty(attack, targetPosition, mistakes = 0) {
   const previousInterval = attack.spawnInterval;
-  if (targetPosition < 35) {
+  const previousApproach = attack.approachSeconds;
+  if (targetPosition < 35 && mistakes === 0) {
     attack.earlyHits += 1;
-    if (attack.earlyHits >= 2) {
+    if (attack.earlyHits >= 3) {
       attack.spawnInterval = Math.max(MIN_SPAWN_SECONDS, previousInterval - 1);
+      attack.approachSeconds = Math.max(20, previousApproach - 1);
       attack.earlyHits = 0;
     }
   } else {
     attack.earlyHits = 0;
-    if (targetPosition >= 65) {
+    if (targetPosition >= 65 || mistakes >= 2) {
       attack.spawnInterval = Math.min(SPAWN_SECONDS, previousInterval + 1);
+      attack.approachSeconds = Math.min(APPROACH_SECONDS, previousApproach + 1);
+    }
+  }
+  // Keep every approaching zombie in the same place when its walking speed changes.
+  if (attack.approachSeconds !== previousApproach) {
+    for (const zombie of attack.zombies) {
+      const progress = (attack.time - zombie.bornAt) / previousApproach;
+      zombie.bornAt = attack.time - progress * attack.approachSeconds;
     }
   }
   if (attack.spawnInterval !== previousInterval) {

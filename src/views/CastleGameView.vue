@@ -8,7 +8,6 @@ import RoundSummary from '../components/game/RoundSummary.vue';
 import VictoryConfetti from '../components/game/VictoryConfetti.vue';
 import {
   REQUIRED_WINS,
-  APPROACH_SECONDS,
   isCorrectAnswer,
   nextWord,
   createAttack,
@@ -89,7 +88,7 @@ export default {
         return this.bossHealth > 0 ? [{ id: 'boss', boss: true, position: this.bossPosition }] : [];
       const approaching = this.attack.zombies.map((zombie) => ({
         ...zombie,
-        position: ((this.attack.time - zombie.bornAt) / APPROACH_SECONDS) * 100,
+        position: ((this.attack.time - zombie.bornAt) / this.attack.approachSeconds) * 100,
       }));
       return this.shot ? [...approaching, ...this.shot.visibleTargets] : approaching;
     },
@@ -104,7 +103,7 @@ export default {
       if (this.phase === 'celebration') return 'Nyt applausen! Ein litt for stor gjest er på veg …';
       return this.waiting
         ? `Neste zombie om ${this.spawnCountdown} sekund. Gjer deg klar!`
-        : `Ny zombie kvart ${this.attack.spawnInterval}. sekund. 20 sekund til borga!`;
+        : `Ny zombie kvart ${this.attack.spawnInterval}. sekund. ${this.attack.approachSeconds} sekund til borga!`;
     },
   },
   watch: {
@@ -166,6 +165,7 @@ export default {
     finishShot() {
       this.impact = { position: this.shot.targetPosition, startedAt: this.attack.time };
       const targetPosition = this.shot.targetPosition;
+      const mistakes = this.shot.mistakes;
       this.shot = null;
       if (this.phase === 'boss') {
         this.bossHealth = damageBoss(this.bossHealth);
@@ -184,7 +184,7 @@ export default {
         this.gameAudio.hit();
         if (this.completed === this.total) this.startCelebration();
         else {
-          adjustDifficulty(this.attack, targetPosition);
+          adjustDifficulty(this.attack, targetPosition, mistakes);
           ensureZombie(this.attack);
         }
       }
@@ -224,12 +224,13 @@ export default {
         const position =
           this.phase === 'boss'
             ? this.bossPosition
-            : ((this.attack.time - target.bornAt) / APPROACH_SECONDS) * 100;
+            : ((this.attack.time - target.bornAt) / this.attack.approachSeconds) * 100;
         this.shot = {
           id: `${target.id}-${this.attempt}`,
           word: answer.trim(),
           startedAt: this.attack.time,
           targetPosition: position,
+          mistakes: this.mistakes,
           visibleTargets: [{ ...target, position }],
         };
         this.feedback = 'PANG! Eit engelsk ord rett i fleisen.';
