@@ -1,5 +1,5 @@
 export const REQUIRED_WINS = 3;
-export const APPROACH_SECONDS = 30;
+export const APPROACH_SECONDS = 60;
 
 export function normalizeAnswer(answer) {
   return answer.trim().toLocaleLowerCase('en').replace(/\s+/g, ' ');
@@ -20,7 +20,7 @@ export function nextWord(words, progress, previousId, random = Math.random) {
   return candidates[Math.floor(random() * candidates.length)];
 }
 
-export const SPAWN_SECONDS = 15;
+export const SPAWN_SECONDS = 30;
 export const MIN_SPAWN_SECONDS = 5;
 
 export function createAttack() {
@@ -30,8 +30,8 @@ export function createAttack() {
     spawnInterval: SPAWN_SECONDS,
     earlyHits: 0,
     approachSeconds: APPROACH_SECONDS,
-    nextId: 2,
-    zombies: [{ id: 1, bornAt: 0 }],
+    nextId: 1,
+    zombies: [],
   };
 }
 

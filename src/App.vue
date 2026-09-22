@@ -1,13 +1,15 @@
 <script>
 import { loadScore, saveScore, POINTS_PER_ZOMBIE } from './services/scoreStorage.js';
+import VocabularyStudyDialog from './components/vocabulary/VocabularyStudyDialog.vue';
 import VocabularyView from './views/VocabularyView.vue';
 import CastleGameView from './views/CastleGameView.vue';
 import { loadBatches, saveBatches } from './services/vocabularyStorage.js';
 
 export default {
-  components: { VocabularyView, CastleGameView },
+  components: { VocabularyView, CastleGameView, VocabularyStudyDialog },
   data() {
     return {
+      showStudy: false,
       totalScore: 0,
       scoreError: '',
       batches: [],
@@ -147,9 +149,9 @@ export default {
         </div>
         <div class="weekly-strip">
           <span class="strip-icon">✎</span>
-          <div>
-            <span class="eyebrow">DEI HEMMELEGE VÅPNA DENNE VEKA</span>
-            <h3>{{ latestBatch.name }}</h3>
+          <button class="weekly-study-link" aria-haspopup="dialog" @click="showStudy = true">
+            <span class="eyebrow">VEKAS GLOSER · TRYKK FOR Å PUGGE</span>
+            <strong>{{ latestBatch.name }}</strong>
             <p>
               {{
                 latestBatch.words
@@ -158,7 +160,7 @@ export default {
                   .join(' · ')
               }}{{ latestBatch.words.length > 5 ? ' · …' : '' }}
             </p>
-          </div>
+          </button>
           <button class="secondary" @click="screen = 'vocabulary'">Ordne gloser ↗</button>
         </div>
         <div class="how-it-works">
@@ -180,6 +182,11 @@ export default {
         </div>
       </section>
     </main>
+    <VocabularyStudyDialog
+      v-if="showStudy && latestBatch"
+      :batch="latestBatch"
+      @close="showStudy = false"
+    />
     <footer>
       <span>Laga for små hovud med stor fantasi.</span
       ><span>✦ Litt modigare. Nokre gloser rikare.</span>

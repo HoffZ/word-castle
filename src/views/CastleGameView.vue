@@ -118,7 +118,6 @@ export default {
   },
   mounted() {
     this.gameAudio.unlock();
-    this.gameAudio.spawn();
     this.chooseWord();
     this.frame = requestAnimationFrame(this.tick);
     document.addEventListener('visibilitychange', this.onVisibilityChange);

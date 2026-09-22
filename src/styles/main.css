@@ -1831,3 +1831,91 @@ progress::-webkit-progress-value {
     width: 100px;
   }
 }
+
+.weekly-study-link {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 8px;
+  border-radius: 8px;
+}
+.weekly-study-link:hover {
+  background: #e5e9da;
+}
+.weekly-study-link strong {
+  display: block;
+  font:
+    500 21px 'Fredoka',
+    sans-serif;
+  margin: 6px 0 3px;
+  overflow-wrap: anywhere;
+}
+.study-dialog {
+  width: min(600px, calc(100% - 24px));
+  max-height: 85dvh;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  color: var(--green);
+  background: #fffdf7;
+  box-shadow: 0 20px 70px #142b3650;
+}
+.study-dialog::backdrop {
+  background: #172e3680;
+}
+.study-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.study-heading h2 {
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+.study-heading .secondary {
+  flex-shrink: 0;
+}
+.study-intro {
+  color: var(--muted);
+  margin: 18px 0;
+  font-size: 13px;
+}
+.study-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.study-table th,
+.study-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.study-table th {
+  background: #eaf0df;
+  font-size: 12px;
+}
+.study-table td[lang='en'] {
+  font-weight: 700;
+}
+.study-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 14px;
+}
+@media (max-width: 620px) {
+  .study-dialog {
+    padding: 16px;
+  }
+  .study-heading h2 {
+    font-size: 23px;
+  }
+  .study-heading .secondary {
+    padding: 10px;
+  }
+}
