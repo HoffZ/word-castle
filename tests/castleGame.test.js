@@ -9,7 +9,7 @@ test('answers accept case, outer spaces, repeated spaces and explicit alternativ
   assert.equal(isCorrectAnswer('cat', 'cats'), false);
   assert.equal(isCorrectAnswer('hund', 'dog'), false);
 });
-test('a round practises every word exactly three times before finishing', () => {
+test('a round practises every word exactly once before finishing', () => {
   const progress = {};
   let previous;
   for (let turn = 0; turn < words.length * REQUIRED_WINS; turn++) {
@@ -19,24 +19,27 @@ test('a round practises every word exactly three times before finishing', () => 
     progress[word.id] = (progress[word.id] || 0) + 1;
     previous = word.id;
   }
-  assert.deepEqual(progress, { a: 3, b: 3, c: 3 });
+  assert.deepEqual(progress, { a: 1, b: 1, c: 1 });
   assert.equal(nextWord(words, progress, previous), null);
 });
 test('one-word homework works and completed words cannot return', () => {
-  assert.equal(nextWord([words[0]], { a: 2 }, 'a').id, 'a');
-  assert.equal(nextWord([words[0]], { a: 3 }, 'a'), null);
-  assert.equal(nextWord(words, { a: 3, b: 3, c: 2 }, 'c').id, 'c');
+  assert.equal(nextWord([words[0]], { a: 0 }, 'a').id, 'a');
+  assert.equal(nextWord([words[0]], { a: 1 }, 'a'), null);
+  assert.equal(nextWord(words, { a: 1, b: 1, c: 0 }, 'c').id, 'c');
 });
 
-test('the first zombie arrives at 30 seconds and takes a full minute to reach the castle', async () => {
+test('the first zombie arrives immediately and takes a full minute to reach the castle', async () => {
   const { createAttack, advanceAttack } = await import('../src/game/castleGame.js');
   const attack = createAttack();
-  assert.equal(attack.zombies.length, 0);
+  assert.equal(attack.zombies.length, 1);
   advanceAttack(attack, 29);
-  assert.equal(attack.zombies.length, 0);
+  assert.equal(attack.zombies.length, 1);
   advanceAttack(attack, 1);
-  assert.deepEqual(attack.zombies, [{ id: 1, bornAt: 30 }]);
-  assert.equal(advanceAttack(attack, 59), false);
+  assert.deepEqual(attack.zombies, [
+    { id: 1, bornAt: 0 },
+    { id: 2, bornAt: 30 },
+  ]);
+  assert.equal(advanceAttack(attack, 29), false);
   assert.equal(advanceAttack(attack, 1), true);
 });
 
@@ -44,15 +47,15 @@ test('the nearest zombie is removed and an empty battlefield is refilled immedia
   const { createAttack, advanceAttack, shootNearest, ensureZombie } =
     await import('../src/game/castleGame.js');
   const attack = createAttack();
-  advanceAttack(attack, 60);
+  advanceAttack(attack, 30);
   attack.zombies.reverse();
   assert.equal(shootNearest(attack).id, 1);
   ensureZombie(attack);
   assert.equal(attack.zombies.length, 1);
   shootNearest(attack);
   ensureZombie(attack);
-  assert.deepEqual(attack.zombies, [{ id: 3, bornAt: 60 }]);
-  assert.equal(attack.nextSpawn, 90);
+  assert.deepEqual(attack.zombies, [{ id: 3, bornAt: 30 }]);
+  assert.equal(attack.nextSpawn, 60);
 });
 
 test('three early unassisted hits increase difficulty without moving existing zombies', async () => {

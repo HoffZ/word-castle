@@ -3,7 +3,7 @@ import VictoryConfetti from './VictoryConfetti.vue';
 export default {
   components: { VictoryConfetti },
   props: { score: Number, count: Number, won: Boolean },
-  emits: ['replay', 'exit'],
+  emits: ['replay', 'restart', 'exit'],
 };
 </script>
 <template>
@@ -13,9 +13,9 @@ export default {
     <span class="eyebrow">{{
       won ? 'Borga er redda! Hjernane òg!' : 'Zombiane kom heilt fram!'
     }}</span>
-    <h1>{{ won ? 'Heilt kanon!' : 'GAME OVER' }}</h1>
+    <h1>{{ won ? 'Heilt kanon!' : 'Borga fall!' }}</h1>
     <p v-if="won">
-      Du svarte rett på {{ count === 1 ? 'glosa di' : `alle dei ${count} glosene` }} tre gonger.<br />Og
+      Du svarte rett på {{ count === 1 ? 'glosa di' : `alle dei ${count} glosene` }} éin gong.<br />Og
       sjefszombien? Han flaug heim utan bukser. For ein siger!
     </p>
     <p v-else>
@@ -26,6 +26,7 @@ export default {
     <button class="primary" @click="$emit('replay')">
       {{ won ? 'Eitt åtak til ↗' : 'Prøv igjen ↗' }}
     </button>
+    <button class="secondary" @click="$emit('restart')">Begynn på nytt</button>
     <button class="text-button" @click="$emit('exit')">Tilbake til borga</button>
   </section>
 </template>

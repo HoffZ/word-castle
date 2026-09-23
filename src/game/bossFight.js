@@ -1,5 +1,5 @@
 export const BOSS_HEALTH = 3;
-export const BOSS_APPROACH_SECONDS = 25;
+export const BOSS_APPROACH_SECONDS = 35;
 export const CELEBRATION_SECONDS = 4;
 
 export function bossVocabulary(batches, currentBatch) {

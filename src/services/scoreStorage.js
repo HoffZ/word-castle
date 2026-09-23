@@ -1,5 +1,5 @@
 export const SCORE_KEY = 'word-castle.total-score';
-export const POINTS_PER_ZOMBIE = 100;
+export const POINTS_PER_WORD = 100;
 
 export function loadScore(storage = localStorage) {
   const raw = storage.getItem(SCORE_KEY);

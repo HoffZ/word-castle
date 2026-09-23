@@ -51,7 +51,7 @@ export default {
             sau.»
           </p>
           <p class="muted">
-            Feil er ein del av magien. Kvar glose får tre augneblinkar i rampelyset.
+            Feil er ein del av magien. Kvar glose får ein augneblink i rampelyset.
           </p>
         </div>
         <div class="collection-heading">

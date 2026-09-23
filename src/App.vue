@@ -1,14 +1,16 @@
 <script>
-import { loadScore, saveScore, POINTS_PER_ZOMBIE } from './services/scoreStorage.js';
+import { loadScore, saveScore, POINTS_PER_WORD } from './services/scoreStorage.js';
 import VocabularyStudyDialog from './components/vocabulary/VocabularyStudyDialog.vue';
 import VocabularyView from './views/VocabularyView.vue';
+import PracticeLevelView from './views/PracticeLevelView.vue';
 import CastleGameView from './views/CastleGameView.vue';
 import { loadBatches, saveBatches } from './services/vocabularyStorage.js';
 
 export default {
-  components: { VocabularyView, CastleGameView, VocabularyStudyDialog },
+  components: { VocabularyView, CastleGameView, VocabularyStudyDialog, PracticeLevelView },
   data() {
     return {
+      level: 1,
       showStudy: false,
       totalScore: 0,
       scoreError: '',
@@ -41,7 +43,7 @@ export default {
   },
   methods: {
     awardPoints(count) {
-      this.totalScore += count * POINTS_PER_ZOMBIE;
+      this.totalScore += count * POINTS_PER_WORD;
       try {
         this.totalScore = saveScore(this.totalScore);
         this.scoreError = '';
@@ -65,9 +67,10 @@ export default {
           'Vi fekk ikkje lagra glosene. Skjemaet ditt er framleis her. Sjekk at nettlesaren tillèt lagring, og prøv igjen.';
       }
     },
-    play() {
+    play(level = 1) {
+      this.level = level;
       this.gameKey += 1;
-      this.screen = 'game';
+      this.screen = level === 3 ? 'game' : 'practice';
     },
   },
 };
@@ -105,15 +108,26 @@ export default {
         @save="saveBatch"
         @cancel="screen = 'home'"
       />
+      <PracticeLevelView
+        v-else-if="screen === 'practice'"
+        :key="gameKey"
+        :level="level"
+        :score="totalScore"
+        @solved="awardPoints(1)"
+        :batch="latestBatch"
+        @next="play(level + 1)"
+        @exit="screen = 'home'"
+      />
       <CastleGameView
         v-else-if="screen === 'game'"
         :key="gameKey"
         :batch="latestBatch"
         :batches="batches"
         :score="totalScore"
-        @defeated="awardPoints"
+        @solved="awardPoints"
         @exit="screen = 'home'"
-        @replay="play"
+        @replay="play(3)"
+        @restart="play(1)"
       />
       <section v-else class="home-page">
         <div class="hero-copy">
@@ -123,7 +137,7 @@ export default {
           <p>
             Ei borg å forsvare. Ein gjeng svolte zombiar.<br />Og éin modig glosehelt. Det er deg!
           </p>
-          <button class="primary" @click="play">Forsvar borga <span>↗</span></button>
+          <button class="primary" @click="play(1)">Start eventyret <span>↗</span></button>
           <p class="microcopy">Ingen poeng forsvinn. Berre litt meir magi kvar gong.</p>
         </div>
         <div class="adventure-card">
@@ -166,18 +180,18 @@ export default {
         <div class="how-it-works">
           <div>
             <span>01</span>
-            <h3>Les på kanona</h3>
-            <p>Ho treng eit engelsk ord.<br />Krut er visst ute av mote.</p>
+            <h3>Finn rett borgport</h3>
+            <p>Kopla engelske og norske ord.<br />Borgvakta treng pakkehjelp.</p>
           </div>
           <div>
             <span>02</span>
-            <h3>Lad med gloser</h3>
-            <p>Skriv ordet på engelsk.<br />Send ein zombie på flygetur.</p>
+            <h3>Bygg ordmuren</h3>
+            <p>Legg bokstavane på rett plass.<br />Bygg i ditt eige tempo.</p>
           </div>
           <div>
             <span>03</span>
-            <h3>Få orda til å sitje</h3>
-            <p>Svar rett på kvar glose tre gonger.<br />Hjernen tek ein liten sigersdans.</p>
+            <h3>Forsvar borga</h3>
+            <p>Bruk det du har lært i kamp.<br />Send zombiane heim i pysjen.</p>
           </div>
         </div>
       </section>

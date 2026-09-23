@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadScore, saveScore, POINTS_PER_ZOMBIE } from '../src/services/scoreStorage.js';
+import { loadScore, saveScore, POINTS_PER_WORD } from '../src/services/scoreStorage.js';
 
 function memoryStorage(initial = null) {
   let value = initial;
@@ -15,9 +15,9 @@ function memoryStorage(initial = null) {
 test('points accumulate across rounds and reloads', () => {
   const storage = memoryStorage();
   assert.equal(loadScore(storage), 0);
-  saveScore(loadScore(storage) + 3 * POINTS_PER_ZOMBIE, storage);
+  saveScore(loadScore(storage) + 3 * POINTS_PER_WORD, storage);
   assert.equal(loadScore(storage), 300);
-  saveScore(loadScore(storage) + 2 * POINTS_PER_ZOMBIE, storage);
+  saveScore(loadScore(storage) + 2 * POINTS_PER_WORD, storage);
   assert.equal(loadScore(storage), 500);
   assert.equal(saveScore(0, storage), 500);
   assert.equal(loadScore(storage), 500);

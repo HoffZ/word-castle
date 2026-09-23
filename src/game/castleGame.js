@@ -1,4 +1,4 @@
-export const REQUIRED_WINS = 3;
+export const REQUIRED_WINS = 1;
 export const APPROACH_SECONDS = 60;
 
 export function normalizeAnswer(answer) {
@@ -30,8 +30,8 @@ export function createAttack() {
     spawnInterval: SPAWN_SECONDS,
     earlyHits: 0,
     approachSeconds: APPROACH_SECONDS,
-    nextId: 1,
-    zombies: [],
+    nextId: 2,
+    zombies: [{ id: 1, bornAt: 0 }],
   };
 }
 

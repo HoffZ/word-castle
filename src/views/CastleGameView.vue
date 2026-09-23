@@ -33,7 +33,7 @@ export default {
     batches: { type: Array, required: true },
     score: { type: Number, required: true },
   },
-  emits: ['exit', 'replay', 'defeated'],
+  emits: ['exit', 'replay', 'restart', 'solved'],
   data() {
     return {
       soundEnabled: loadSoundEnabled(),
@@ -118,6 +118,7 @@ export default {
   },
   mounted() {
     this.gameAudio.unlock();
+    this.gameAudio.spawn();
     this.chooseWord();
     this.frame = requestAnimationFrame(this.tick);
     document.addEventListener('visibilitychange', this.onVisibilityChange);
@@ -143,7 +144,7 @@ export default {
       this.attack.zombies = [];
       this.hint = false;
       this.impact = null;
-      this.feedback = 'Alle vekas gloser tre gonger! Hjernen din fortener ståande applaus.';
+      this.feedback = 'Alle vekas gloser er i boks! Hjernen din fortener ståande applaus.';
       this.gameAudio.victory();
     },
     startBoss() {
@@ -166,10 +167,10 @@ export default {
       const targetPosition = this.shot.targetPosition;
       const mistakes = this.shot.mistakes;
       this.shot = null;
+      this.$emit('solved', 1);
       if (this.phase === 'boss') {
         this.bossHealth = damageBoss(this.bossHealth);
         if (this.bossHealth === 0) {
-          this.$emit('defeated', 1);
           this.gameAudio.bossDeath();
           this.outcome = 'won';
         } else {
@@ -179,7 +180,6 @@ export default {
           this.chooseWord();
         }
       } else {
-        this.$emit('defeated', 1);
         this.gameAudio.hit();
         if (this.completed === this.total) this.startCelebration();
         else {
@@ -272,6 +272,7 @@ export default {
     :score="score"
     :count="batch.words.length"
     @replay="$emit('replay')"
+    @restart="$emit('restart')"
     @exit="$emit('exit')"
   />
   <section
@@ -285,11 +286,11 @@ export default {
         {{ phase === 'boss' ? 'Sjefszombien!' : 'Forsvar borga' }}
         <span class="title-spark">🧟</span>
       </h1>
-      <span class="pill">{{ batch.name }} · 3 RETTE PER GLOSE</span>
+      <span class="pill">NIVÅ 3 · {{ batch.name }} · 1 RETT PER GLOSE</span>
     </div>
     <div v-if="phase === 'celebration'" class="weekly-celebration" role="status">
       <VictoryConfetti /><strong>🎉 Vekas gloser er i boks!</strong
-      ><span>Tre rette på kvar glose. Heilt kanon! No kjem sjefszombien …</span>
+      ><span>Eitt rett svar på kvar glose. Heilt kanon! No kjem sjefszombien …</span>
     </div>
     <div v-if="phase === 'boss'" class="boss-status" role="status">
       <strong>SJEF SZOMBERT</strong
@@ -332,23 +333,6 @@ export default {
           :attempt="attempt"
           @answer="submitAnswer"
         />
-      </div>
-    </div>
-    <div class="practice-list" aria-label="Gloseframgang">
-      <div
-        v-for="word in batch.words"
-        :key="word.id"
-        class="practice-word"
-        :class="{ current: currentWord?.id === word.id }"
-      >
-        <span>{{ word.norwegian }}</span
-        ><span :aria-label="`${progress[word.id] || 0} av 3 rette`"
-          ><i
-            v-for="number in 3"
-            :key="number"
-            :class="{ earned: (progress[word.id] || 0) >= number }"
-          ></i
-        ></span>
       </div>
     </div>
   </section>
